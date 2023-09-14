@@ -1,7 +1,11 @@
-# eventlookup
+# Unique data generator
+
+Queries New Relic data for delimited fields, gathers unique values and reingests for use in dashboard filters.
+
+Intended to run in an synhtetic monitor, can also be run locally for testing.
 
 
-Send the test data to your account:
+# Send the test data to your account:
 
 ```
 export NR_INGEST_KEY="...NRAL"
@@ -15,14 +19,15 @@ gzip -c test_data2.json | curl -X POST -H "Content-Type: application/json" -H "A
 
 
 
-Run the script:
+# Run the script:\
 ```
 npm install
 node generateData.sh
 ```
 
 
-Query the data:
+# Query the data:
+
 ```
 select * from dashFilterData
 ```

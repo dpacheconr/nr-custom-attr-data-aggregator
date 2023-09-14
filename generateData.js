@@ -21,8 +21,13 @@ const TASKS = [{
 
 // Configurations
 const NAMESPACE = "dashFilterData";         // event details are prefixed with this, best to leave as is
-const NEWRELIC_DC = "US"            // datacenter for account - US or EU
-const ACCOUNT_ID = "3491187"         // Account ID (required if ingesting events)
+const NEWRELIC_DC = "US"                    // datacenter for account - US or EU
+const ACCOUNT_ID = "3491187"                // Account ID (required if ingesting events)
+let INSERT_KEY = $secure ? $secure.YOUR_INGEST_KEY_CRED_NAME : null     // Ingest key, stored in secure credential
+let QUERY_KEY =  $secure ? $secure.YOUR_QUERY_KEY_CRED_NAME  : null     // User query key, stored in secure credential
+
+
+// Other config, shouldnt need changing
 const VERBOSE_LOG=true          // Control how much logging there is
 const DEFAULT_TIMEOUT = 5000    // You can specify a timeout for each task
 const INGEST_EVENT_ENDPOINT = NEWRELIC_DC === "EU" ? "insights-collector.eu01.nr-data.net" : "insights-collector.newrelic.com" 
@@ -32,7 +37,6 @@ const INGEST_EVENT_TYPE=`${NAMESPACE}` //events are stored in the eventtype
 let assert = require('assert');
 let _ = require("lodash");
 let RUNNING_LOCALLY = false
-
 
 
 /*
@@ -46,7 +50,7 @@ if (IS_LOCAL_ENV) {
   RUNNING_LOCALLY=true
   var $http = require("request");       //only for local development testing
   var $secure = {}                      //only for local development testing
-  QUERY_KEY=process.env['NR_QUERY_KEY']  //NRAK...
+  QUERY_KEY=process.env['NR_QUERY_KEY']  //NRAK... or from env var
   INSERT_KEY=process.env["NR_INGEST_KEY"]  //...NRAL
 
   console.log("Running in local mode",true)
