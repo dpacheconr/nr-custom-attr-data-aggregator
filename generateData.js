@@ -1,25 +1,42 @@
 const TASKS = [{
-    "id":"eventlookup",
-    "name":"eventlookup",
-    "accountId":"3428733",
+    "id":"uniqExperiements",
+    "name":"Unique Experiements",
+    "accountId":"3491187",
     "selector":"experiments",
-    "query":"SELECT uniques(experiments) as experiments from Experiment since 60 minutes ago"
+    "delimiter": ",",
+    "assignment": "=",
+    "query":"SELECT uniques(experiments,10000) as experiments from Experiment since 1 day ago"
+}
+,
+{
+    "id":"uniqFoods",
+    "name":"Unique Foods",
+    "accountId":"3491187",
+    "selector":"food",
+    "delimiter": "|",
+    "assignment": ":",
+    "query":"SELECT uniques(food,10000) as food from SomeThing since 1 day ago"
 }
 ]
 
 // Configurations
-const NAMESPACE = "eventlookup"         // event details are prefixed with this, best to leave as is
-const NEWRELIC_DC = "US"            // datacenter for account - US or EU
-const ACCOUNT_ID = "3428733"         // Account ID (required if ingesting events)
+const NAMESPACE = "dashFilterData";         // event details are prefixed with this, best to leave as is
+const NEWRELIC_DC = "US"                    // datacenter for account - US or EU
+const ACCOUNT_ID = "3491187"                // Account ID (required if ingesting events)
+let INSERT_KEY = $secure ? $secure.YOUR_INGEST_KEY_CRED_NAME : null     // Ingest key, stored in secure credential
+let QUERY_KEY =  $secure ? $secure.YOUR_QUERY_KEY_CRED_NAME  : null     // User query key, stored in secure credential
+
+
+// Other config, shouldnt need changing
 const VERBOSE_LOG=true          // Control how much logging there is
 const DEFAULT_TIMEOUT = 5000    // You can specify a timeout for each task
 const INGEST_EVENT_ENDPOINT = NEWRELIC_DC === "EU" ? "insights-collector.eu01.nr-data.net" : "insights-collector.newrelic.com" 
 const GRAPHQL_ENDPOINT = NEWRELIC_DC === "EU" ? "api.eu.newrelic.com" : "api.newrelic.com" 
-const INGEST_EVENT_TYPE=`${NAMESPACE}sample` //events are stored in the eventtype
+const INGEST_EVENT_TYPE=`${NAMESPACE}` //events are stored in the eventtype
+
 let assert = require('assert');
 let _ = require("lodash");
 let RUNNING_LOCALLY = false
-
 
 
 /*
@@ -33,8 +50,8 @@ if (IS_LOCAL_ENV) {
   RUNNING_LOCALLY=true
   var $http = require("request");       //only for local development testing
   var $secure = {}                      //only for local development testing
-  QUERY_KEY="NRAK-..."  //NRAK...
-  INSERT_KEY="...NRAL"  //...NRAL
+  QUERY_KEY=process.env['NR_QUERY_KEY']  //NRAK... or from env var
+  INSERT_KEY=process.env["NR_INGEST_KEY"]  //...NRAL
 
   console.log("Running in local mode",true)
 } 
@@ -157,7 +174,6 @@ async function runtasks(tasks) {
     let TOTALREQUESTS=0,SUCCESSFUL_REQUESTS=0,FAILED_REQUESTS=0
     let FAILURE_DETAIL = []
     let eventsInnerPayload=[]
-    let payloadelements=[]
     await asyncForEach(tasks, async (task) => {
 
 
@@ -199,64 +215,43 @@ async function runtasks(tasks) {
        
                 let resultData={}
                 let result=null
-            
+
                 resultData=bodyJSON.data.actor.account.nrql.results
                 let elements = []
+                // Gather the data from all the results into one list
                 resultData.forEach(element => {
                     const array = element[String(task.selector)];
                     array.forEach(el => {
-                        const newarray = el.split(',')
-                        newarray.forEach(subel => {
-                        elements.push(subel)
-                        })
+                            elements=elements.concat(el.split(task.delimiter));
                     })
                 })
-                let resultDatapayload = {
-                    experiments: elements,
-                    timestamp: Math.round(Date.now()/1000)
-                }
-                result=_.get(resultDatapayload, task.selector)
 
-                const transformData = (data) => {
-                    let transformedResult=data
-                    //deal with null values (zero default unless specified)
-                    if(data===null) {
-                        transformedResult = task.fillNullValue!==undefined ? task.fillNullValue : 0
-                    }
+                result=Array.from(new Set(elements)); //reduce to unique values
 
-                    return transformedResult
-                }
-
-                
-                if(Array.isArray(result)){
-                    result=result.map((x)=>{x.value=transformData(x.value); return x;})
-                } else {
-                result=transformData(result)
-            }
 
             if(result!==undefined) {
                 SUCCESSFUL_REQUESTS++
-                log(`Task succeeded with result: ${Array.isArray(result) ? `(faceted results: ${result.length})`: result}`)
+                log(`Task succeeded generating ${result.length} values:`)
+                log(result)
 
                 const constructPayload = (result) =>{
                     let attributes={}
+                    const timeNow=Math.round(Date.now()/1000);
+
                     attributes[`${NAMESPACE}.id`]=task.id
                     attributes[`${NAMESPACE}.name`]=task.name
 
                     result.forEach(element => {
-                        if(!(payloadelements.includes(element))){
-                            payloadelements.push(element)
-                            field = element.split('=');
+                            field = element.split(task.assignment);
                             let eventPayload = {
-                                name: `${NAMESPACE}.name`,
                                 eventType: INGEST_EVENT_TYPE,
                                 field: field[0],
                                 value: field[1],
-                                timestamp: Math.round(Date.now()/1000)
+                                timestamp: timeNow
                             }
                             eventPayload=Object.assign(eventPayload, attributes)
                             eventsInnerPayload.push(eventPayload)
-                        }});
+                        });
                 }
                 constructPayload(result)
 
