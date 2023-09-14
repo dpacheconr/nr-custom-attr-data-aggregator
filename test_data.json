@@ -1,0 +1,13 @@
+[{
+    "eventType": "Experiment",
+      "experiments": "checkout=a,basket=b,pdp=c,coolfeature=d"
+  }, {
+    "eventType": "Experiment",
+      "experiments": "checkout=a,basket=x,basket=x,pdp=y,button=z"
+  }, {
+    "eventType": "Experiment",
+      "experiments": "searchui=q,button=z,checkout=p"
+  }, {
+    "eventType": "Experiment",
+    "experiments": "checkout=c,basket=x,basket=x,pdp=y,button=z"
+  }]

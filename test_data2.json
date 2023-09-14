@@ -1,0 +1,8 @@
+[{
+    "eventType": "SomeThing",
+      "food": "lunch:sausges and mash|dessert:ice cream"
+  }, {
+    "eventType": "SomeThing",
+      "food": "lunch:roast beef|dessert:jelly|starter:shrimp"
+  }
+]
