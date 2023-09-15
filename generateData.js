@@ -247,7 +247,7 @@ async function runtasks(tasks) {
                                 eventType: INGEST_EVENT_TYPE,
                                 field: field[0],
                                 value: field[1],
-                                timestamp: timeNow
+                                generated: timeNow
                             }
                             eventPayload=Object.assign(eventPayload, attributes)
                             eventsInnerPayload.push(eventPayload)
