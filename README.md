@@ -1,4 +1,4 @@
-# Unique data generator
+# Custom attribute data aggregator
 
 Queries New Relic data for delimited fields, gathers unique values and reingests for use in dashboard filters.
 
