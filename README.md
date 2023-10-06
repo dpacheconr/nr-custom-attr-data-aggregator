@@ -2,7 +2,7 @@
 
 Queries New Relic data for delimited fields, gathers unique values and reingests for use in dashboard filters.
 
-Intended to run in an synhtetic monitor, can also be run locally for testing.
+Intended to run in an synthetic monitor on a regular frequency, can also be run locally for testing.
 
 
 # Send the test data to your account:
