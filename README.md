@@ -19,7 +19,7 @@ gzip -c test_data2.json | curl -X POST -H "Content-Type: application/json" -H "A
 
 
 
-# Run the script:\
+# Run the script:
 ```
 npm install
 node generateData.sh
